@@ -8,13 +8,16 @@
 // Ultrasonic distance sensor - eyes
 #define TRIGGER_PIN            5
 #define ECHO_PIN               6
-#define MAX_DISTANCE           100 // Max distance to ping for (in cm). Maximum distance is rated at 400-500cm.
+#define MAX_DISTANCE           70 // Max distance to ping for (in cm). Maximum distance is rated at 400-500cm.
+                                  // Target objects will be 30 - 50 cm away.
+#define MIN_DISTANCE           6  // Min distance allowed between the robot and an object.
+                                  // Robot required to stop 5 - 8 cm before objects. 
 
 // Servo - head
 #define SERVO_PIN              9
 #define SERVO_MIN_POSITION     0
-#define SERVO_MIDDLE_POSITION  90
 #define SERVO_MAX_POSITION     180
+#define SERVO_MIDDLE_POSITION  (SERVO_MAX_POSITION - SERVO_MIN_POSITION) / 2
 
 // Emic 2
 #define RX_PIN                 10  // Connect to SOUT pin
@@ -72,7 +75,7 @@ void loop() {
       // TODO: Drive same distance back to main road
       turnLeft();
     }
-    
+
     // TODO: Drive enough distance to ensure doesn't detect intersection again
   }
 
@@ -126,8 +129,17 @@ void turnHeadToFaceForward() {
 }
 
 bool objectDetected() {
-  // TODO: Return true is ultrasonic distance sensor detects object within certain distance;
-  return false;
+  // Do multiple pings (default=5), discard out of range pings and return median in microseconds.
+  int medianEchoTime = sonar.ping_median();
+
+  // Converts microseconds to distance in centimeters.
+  int currentDistance = sonar.convert_cm(medianEchoTime);
+
+  bool objectDetected = currentDistance < MAX_DISTANCE;
+
+  // TODO: Dislay currentDistnace on a LED screen?
+
+  return objectDetected;
 }
 
 void deliverPackage() {
