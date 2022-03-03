@@ -8,7 +8,7 @@
 // Ultrasonic distance sensor - eyes
 #define TRIGGER_PIN            5
 #define ECHO_PIN               6
-#define MAX_DISTANCE           70 // Max distance to ping for (in cm). Maximum distance is rated at 400-500cm.
+#define MAX_DISTANCE           67 // Max distance to ping for (in cm). Maximum distance is rated at 400-500cm.
                                   // Target objects will be 30 - 50 cm away.
 #define MIN_DISTANCE           6  // Min distance allowed between the robot and an object.
                                   // Robot required to stop 5 - 8 cm before objects.
