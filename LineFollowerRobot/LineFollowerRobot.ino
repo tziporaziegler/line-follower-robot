@@ -19,6 +19,12 @@
 #define SERVO_MAX_POSITION     180
 #define SERVO_MIDDLE_POSITION  (SERVO_MAX_POSITION - SERVO_MIN_POSITION) / 2
 
+// speed values
+#define leftSpd                 100
+#define rightSpd                80
+#define adjust_delay            100 // use in servo delay
+#define turn_delay              500
+
 // Emic 2
 #define RX_PIN                 6  // Connect to SOUT pin
 #define TX_PIN                 5  // Connect to SIN pin
@@ -66,7 +72,8 @@ talk("Starting");
 }
 
 void loop() {
-  driveForward(); //follow line
+  //driveForward()
+  followLine();// adjusts left right and goes straight
 
   if (checkForIntersections && intersectionDetected()) {
     talk("Intersection detected");
@@ -136,26 +143,73 @@ void loop() {
     }
   }
 }
+void adjustLeft()
+{
+  right_wheel.write(rightSpd); //start spinning
+  delay(adjust_delay);
+  right_wheel.write(90); //stop spinning
+}
 
-void driveForward() {
-  rightWheel.write(180);
-  leftWheel.write(180);
+void adjustRight()
+{
+  left_wheel.write(leftSpd);
+  delay(adjust_delay);
+  left_wheel.write(90);
+  
+}
+
+void driveForward()
+{
+  // TODO: Move wheels forward x amount using IR sensors to follow the line
+  right_wheel.write(rightSpd);
+  left_wheel.write(leftSpd);
+  delay(adjust_delay);
+  right_wheel.write(90);
+  right_wheel.write(90);        
 }
 
 void turnRight() {
   // TODO: adjust wheel motors to turn right
+  left_wheel.write(leftSpd);
+  delay(turn_delay);
+  left_wheel.write(90);
 }
 
-void turnLeft() {
-  // TODO: adjust wheel motors to turn left
+void turnLeft() 
+{
+  right_wheel.write(rightSpd);
+  delay(turn_delay);
+  right_wheel.write(90);
 }
 
-void reverseDirection() {
-  // TODO: adjust wheel motors to turn around, or just do 2 right turns
+void reverseDirection() 
+{
+  turnRight();
+  turnRight();
 }
+void followLine()
+{
+  if(intersectionDetected())
+  {
+      intersectionNum++; //do nothing?? but i wanna check this condition first for some reason
+  }
+  else if((digitalRead(IR_LEFT)==1)&&(digitalRead(IR_RIGHT==0)))
+  {
+    adjustLeft();
+  }
+  else if((digitalRead(IR_LEFT)==0)&&(digitalRead(IR_RIGHT==1)))
+  {
+    adjustRight();
+  }
+  else //both are 1
+  {
+    driveForward();
+  }
+}
+
 
 bool intersectionDetected() {
-  return digitalRead( IR_LEFT) && digitalRead(IR_RIGHT);
+  return digitalRead(IR_LEFT) && digitalRead(IR_RIGHT);
   // returns true when both meeasurements from IR sensors are high (1). 
 }
 
