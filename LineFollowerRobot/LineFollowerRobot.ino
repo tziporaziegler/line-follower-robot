@@ -12,7 +12,7 @@
                                   // Target objects will be 30 - 50 cm away.
 #define MIN_DISTANCE           6  // Min distance allowed between the robot and an object.
                                   // Robot required to stop 5 - 8 cm before objects.
-
+              
 // Servo - head
 #define SERVO_PIN              9
 #define SERVO_MIN_POSITION     0
@@ -27,6 +27,9 @@
 
 #define RIGHT_WHEEL_PIN        10
 #define LEFT_WHEEL_PIN         11
+
+#define IR_RIGHT               12
+#define IR_LEFT                13
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 Servo servo;
@@ -63,41 +66,71 @@ talk("Starting");
 }
 
 void loop() {
-  driveForward();
+  driveForward(); //follow line
 
   if (checkForIntersections && intersectionDetected()) {
     talk("Intersection detected");
     intersectionNum++;
 
     if (intersectionNum == 1) {
-      // Figure out which way to continue
-    } else if (intersectionNum >= 3) {
-      const bool objectOnRight = checkForObjectOnRight();
-      const bool objectOnLeft = checkForObjectOnLeft();
-      turnHeadToFaceForward();
-
+      // have to add adjust right and left functions based on IR sensors measurements.
+    } else if{ intersectionNum == 2){
+      Talk("First intersection, No Object checking");
+    }
+      else if (intersectionNum >= 3) {
+        //add second intersection
+        const bool objectOnRight = checkForObjectOnRight();
+        const bool objectOnLeft = checkForObjectOnLeft();
+        turnHeadToFaceForward();
+      
       if (objectOnRight) {
         turnRight();
         // TODO: Drive until distance sensor detects that short enough distance from the object
+        while(!objectDetected()){
+          driveForward();
+        }
         deliverPackage();
         reverseDirection();
         // TODO: Drive same distance back to main road
-        turnRight();
-      }
+        while(!intersectionDetected()){
+          driveForward();
+        }
+      
+        // you are at intersection but check if objects are on left
+        if (objectonLeft){
+          while(!objectDetected()){
+            driveForward();
+          }
+          deliverPackage();
+          reverseDirection();
+          while(!intersectionDetected()){
+            driveForward();
+          }
+          turnLeft();
+        }
+        else{
+          turnRight();
+        }
 
-      if (objectOnLeft) {
+       // will only check if no objects on right.
+      }else if (objectOnLeft) {
         turnLeft();
         // TODO: Drive until distance sensor detects that short enough distance from the object
-        deliverPackage();
-        reverseDirection();
-        // TODO: Drive same distance back to main road
-        turnLeft();
+        while(!objectDetected()){
+            driveForward();
+          }
+          deliverPackage();
+          reverseDirection();
+          while(!intersectionDetected()){
+            driveForward();
+          }
+          turnLeft();
       }
-
-      // TODO: Drive enough distance to ensure doesn't detect intersection again
     }
-
-    if (endDetected()) {
+  
+    
+// this will run if no intersection detected
+  } else if (endDetected()) {
       celebrate();
       goHome();
     }
@@ -122,7 +155,8 @@ void reverseDirection() {
 }
 
 bool intersectionDetected() {
-  return false;
+  return digitalRead( IR_LEFT) && digitalRead(IR_RIGHT);
+  // returns true when both meeasurements from IR sensors are high (1). 
 }
 
 bool checkForObjectOnRight() {
