@@ -20,6 +20,7 @@
 // Speed values
 #define LEFT_SPEED              120
 #define RIGHT_SPEED             60
+#define DRIVE_DELAY             200
 #define ADJUST_DELAY            100 // use in servo delay
 #define TURN_DELAY              690
 
@@ -77,7 +78,6 @@ void setup() {
 }
 
 void loop() {
-
   followLine();
 
   if (checkForIntersections && intersectionDetected()) {
@@ -85,73 +85,72 @@ void loop() {
     talk(String("intersection number") + intersectionNum + "detected");
 
     if (intersectionNum == 1) {
-      driveForward();
+      for (int i = 0; i < 4; i++) {
+        driveForward();
+      }
     }
-    else  if (intersectionNum >= 2) {
+    else if (intersectionNum >= 2) {
       const bool objectOnRight = checkForObjectOnRight();
       const bool objectOnLeft = checkForObjectOnLeft();
       turnHeadToFaceForward();
 
       if (objectOnRight) {
-        turnRight();
-        // TODO: Drive until distance sensor detects that short enough distance from the object
+        while (!endDetected()) {
+          followLine();
+        }
+        stop();
+
         deliverPackage();
         reverseDirection();
-        // TODO: Drive same distance back to main road
-        turnRight();
-      }
+        delay(100);
 
-      while (!endDetected()) {
-        followLine();
-      }
-      stop();
+        // Drive same distance back to main road
+        while (!intersectionDetected()) {
+          followLine();
+        }
+        stop();
 
-      deliverPackage();
-      reverseDirection();
-      delay(100);
+        // you are at intersection but check if objects are on left
+        if (objectOnLeft) {
+          while (!endDetected()) {
+            followLine();
+          }
+          stop();
 
-      // Drive same distance back to main road
-      while (!intersectionDetected()) {
-        followLine();
+          deliverPackage();
+          reverseDirection();
+          delay(100);
+
+          while (!intersectionDetected()) {
+            followLine();
+          }
+          stop();
+
+          turnLeft();
+        }
+        else {
+          turnRight();
+        }
       }
-      stop();
-      //
-      //        // you are at intersection but check if objects are on left
-      //        if (objectOnLeft) {
-      //          while (!endDetected()) {
-      //            followLine();
-      //          }
-      //          stop();
-      //
-      //          deliverPackage();
-      //
-      //          reverseDirection();
-      //
-      //          while (!intersectionDetected()) {
-      //            followLine();
-      //          }
-      //          stop();
-      //          turnLeft();
-      //        }
-      //        else {
-      turnRight();
-      //        }
-      //
-      //        // will only check if no objects on right.
+      else if (objectOnLeft) {
+        turnLeft();
+        // Drive until distance sensor detects that short enough distance from the object
+        while (!endDetected()) {
+          followLine();
+        }
+        stop();
+
+        deliverPackage();
+        reverseDirection();
+
+        while (!intersectionDetected()) {
+          followLine();
+        }
+        stop();
+
+        turnLeft();
+      }
     }
-    //else if (objectOnLeft) {
-    //        turnLeft();
-    //        // Drive until distance sensor detects that short enough distance from the object
-    //        while (!endDetected()) {
-    //          driveForward();
-    //        }
-    //        deliverPackage();
-    //        reverseDirection();
-    //        while (!intersectionDetected()) {
-    //          driveForward();
-    //        }
-    //        turnLeft();
-    //      }
   }
   delay(200); //redundancy
   //celebrate();
@@ -212,7 +211,7 @@ void driveForward()
 {
   rightWheel.write(RIGHT_SPEED);
   leftWheel.write(LEFT_SPEED);
-  delay(ADJUST_DELAY);
+  delay(DRIVE_DELAY);
   stop();
 }
 
