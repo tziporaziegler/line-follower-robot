@@ -20,10 +20,10 @@
 #define SERVO_MIDDLE_POSITION  (SERVO_MAX_POSITION - SERVO_MIN_POSITION) / 2
 
 // speed values
-#define leftSpd                 100
-#define rightSpd                80
-#define adjust_delay            100 // use in servo delay
-#define turn_delay              500
+#define leftSpd                 120
+#define rightSpd                50
+#define adjust_delay            150 // use in servo delay
+#define turn_delay              900
 
 // Emic 2
 #define RX_PIN                 6  // Connect to SOUT pin
@@ -35,7 +35,7 @@
 #define LEFT_WHEEL_PIN         11
 
 #define IR_RIGHT               12
-#define IR_LEFT                13
+#define IR_LEFT                3
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 Servo servo;
@@ -146,15 +146,13 @@ void loop() {
 void adjustLeft()
 {
   right_wheel.write(rightSpd); //start spinning
-  delay(adjust_delay);
-  right_wheel.write(90); //stop spinning
+  left_wheel.write(90); //stop spinning
 }
 
 void adjustRight()
 {
   left_wheel.write(leftSpd);
-  delay(adjust_delay);
-  left_wheel.write(90);
+  right_wheel.write(90);
   
 }
 
@@ -171,14 +169,18 @@ void driveForward()
 void turnRight() {
   // TODO: adjust wheel motors to turn right
   left_wheel.write(leftSpd);
+  right_wheel.write(leftSpd);
   delay(turn_delay);
   left_wheel.write(90);
+  right_wheel.write(90);
 }
 
 void turnLeft() 
 {
   right_wheel.write(rightSpd);
+  left_wheel.write(rightSpd);
   delay(turn_delay);
+  left_wheel.write(90);
   right_wheel.write(90);
 }
 
@@ -189,15 +191,19 @@ void reverseDirection()
 }
 void followLine()
 {
+  left_ir=digitalRead(IR_LEFT);
+  right_ir=digitalRead(IR_RIGHT);
   if(intersectionDetected())
   {
+      left_wheel.write(90);
+      right_wheel.write(90):
       intersectionNum++; //do nothing?? but i wanna check this condition first for some reason
   }
-  else if((digitalRead(IR_LEFT)==1)&&(digitalRead(IR_RIGHT==0)))
+  else if((left_ir==1) && (right_ir==0))
   {
     adjustLeft();
   }
-  else if((digitalRead(IR_LEFT)==0)&&(digitalRead(IR_RIGHT==1)))
+  else if ((left_ir==0) && (right_ir==1))
   {
     adjustRight();
   }
