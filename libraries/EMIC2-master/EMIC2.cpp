@@ -34,10 +34,9 @@ EMIC2::~EMIC2()
 }
 
 // Initializes serial port and checks for availability of the Emic 2 module
-void EMIC2::begin(HardwareSerial *hs)
+void EMIC2::begin(uint8_t rx_pin, uint8_t tx_pin)
 {
-    //_emic2_io = new SoftwareSerial(rx_pin, tx_pin);
-	_emic2_io = hs;
+    _emic2_io = new SoftwareSerial(rx_pin, tx_pin);
     _emic2_io->begin(9600);
     
     #ifdef VERBOSE
@@ -61,11 +60,10 @@ void EMIC2::begin(HardwareSerial *hs)
 }
 
 // Initializes serial port and SD card, and checks for availability of the Emic 2 module
-//void EMIC2::begin(uint8_t rx_pin, uint8_t tx_pin, uint8_t cs_pin)
-void EMIC2::begin(HardwareSerial *hs, uint8_t cs_pin)
+void EMIC2::begin(uint8_t rx_pin, uint8_t tx_pin, uint8_t cs_pin)
 {
-    //begin(rx_pin, tx_pin); // Initializes serial port
-	begin(hs);
+    begin(rx_pin, tx_pin); // Initializes serial port
+
     #if defined(__AVR_ATmega2560__)
     pinMode(53, OUTPUT); // Sets the hardware SS pin on Arduino Mega to output
     #else
@@ -84,7 +82,7 @@ void EMIC2::begin(HardwareSerial *hs, uint8_t cs_pin)
 // Waits (Blocking) until Emic 2 is ready to receive a command
 void EMIC2::ready()
 {
-    //_emic2_io->listen();
+    _emic2_io->listen();
     _emic2_io->flush();  // Flushes receive buffer
     _emic2_io->print('\n');  // Triggers response
     while (_emic2_io->read() != ':') ;  // Awaits for ':' indicator
@@ -352,7 +350,7 @@ void EMIC2::sendCmd(char *cmd)
 // Pauses/Unpauses playback
 EMIC2& EMIC2::operator~()
 {
-    //_emic2_io->listen();
+    _emic2_io->listen();
     // Sends pause/unpause command
     _emic2_io->print('Z');
     uint8_t val;
@@ -371,7 +369,7 @@ EMIC2& EMIC2::operator~()
 // Stops playback
 EMIC2& EMIC2::operator!()
 {
-    //_emic2_io->listen();
+    _emic2_io->listen();
     // Sends stop command
     _emic2_io->print('X');
     while (_emic2_io->read() != ':') ;

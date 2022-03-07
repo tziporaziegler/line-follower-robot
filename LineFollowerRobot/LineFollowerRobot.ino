@@ -1,7 +1,8 @@
 #include <NewPing.h>
 #include <Servo.h>
+#include<SoftwareSerial.h>
 
-#include <HardwareSerial.h>
+//#include <HardwareSerial.h>
 #include <SD.h>  // Needed by the EMIC2 library, though not utilized directly in this program.
 #include "EMIC2.h"
 
@@ -322,8 +323,12 @@ void deliverPackage() {
 }
 
 void talk(String message) {
+  leftWheel.detach();
+  rightWheel.detach();
   emic.speak(message);  
   emic.ready(); // Wait for emic to finish speaking
+  rightWheel.attach(RIGHT_WHEEL_PIN);
+  leftWheel.attach(LEFT_WHEEL_PIN);  
 }
 
 bool endDetected() {
