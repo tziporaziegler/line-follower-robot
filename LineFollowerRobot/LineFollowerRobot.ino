@@ -18,9 +18,9 @@
 #define SERVO_MIDDLE_POSITION  (SERVO_MAX_POSITION - SERVO_MIN_POSITION) / 2
 
 // Speed values
-#define LEFT_SPEED              120
-#define RIGHT_SPEED             60
-#define DRIVE_DELAY             200
+#define LEFT_SPEED              93
+#define RIGHT_SPEED             87
+#define DRIVE_DELAY             50
 #define ADJUST_DELAY            100 // use in servo delay
 #define TURN_DELAY              690
 
@@ -61,8 +61,6 @@ void setup() {
 
   // Initializes the EMIC2 instance.
   // The library sets up a SoftwareSerial port for the communication with the Emic 2 module.
-  //pinMode(RX_PIN,INPUT);
-  //pinMode(TX_PIN,OUTPUT);
   emic.begin(RX_PIN, TX_PIN);
   emic.setVolume(EMIC_VOLUME);
   emic.setVoice(EMIC_VOICE);
@@ -85,9 +83,10 @@ void loop() {
     talk(msg);
 
     if (intersectionNum == 1) {
-      for (int i = 0; i < 4; i++) {
-        followLine();
+      while(intersectionDetected()) {
+        driveForward();
       }
+      stopWheels();
     }
     else if (intersectionNum >= 2) {
       const bool objectOnRight = checkForObjectOnRight();
@@ -159,9 +158,10 @@ void loop() {
         Serial.println("No objects to deliver at this intersection. Moving on.");
       }
 
-      for (int i = 0; i < 4; i++) {
-        followLine();
+      while (intersectionDetected()) {
+        driveForward();
       }
+      stopWheels();
     }
   }
 
@@ -170,8 +170,6 @@ void loop() {
     celebrate();
     goHome();
   }
-  delay(200); //redundancy
-
 }
 
 /** Drives forward and adjusts left and right */
@@ -316,9 +314,8 @@ void deliverPackage() {
 }
 
 void talk(String message) {
-  //emic.speak(message);
-  //emic.ready(); // Wait for emic to finish speaking
-  //delay(1000);
+  emic.speak(message);
+  emic.ready(); // Wait for emic to finish speaking
 }
 
 bool endDetected() {
