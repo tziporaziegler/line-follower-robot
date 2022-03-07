@@ -83,7 +83,7 @@ void loop() {
     talk(msg);
 
     if (intersectionNum == 1) {
-      while(intersectionDetected()) {
+      while (intersectionDetected()) {
         driveForward();
       }
       stopWheels();
@@ -114,6 +114,11 @@ void loop() {
 
         // you are at intersection but check if objects are on left
         if (objectOnLeft) {
+          while (intersectionDetected()) {
+            driveForward();
+          }
+          stopWheels();
+
           while (!endDetected()) {
             followLine();
           }
@@ -190,7 +195,7 @@ void followLine()
   {
     adjustRight();
   }
-  else if (left_ir == 0 && right_ir == 0)
+  else if (!checkForIntersections || ( left_ir == 0 && right_ir == 0))
   {
     driveForward();
   }
@@ -335,7 +340,6 @@ bool endDetected() {
 }
 
 void celebrate() {
-  // TODO: Spin around
   talk("Mission accomplished!");
 }
 
