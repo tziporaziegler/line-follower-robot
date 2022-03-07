@@ -51,7 +51,7 @@ int numPackagesDelivered;
 int intersectionNum;
 
 void setup() {
-  Serial.begin(115200); // Open serial monitor at 115200 baud instead of 9600 to see ping results.
+  Serial.begin(9600);
 
   servo.attach(SERVO_PIN);
   rightWheel.attach(RIGHT_WHEEL_PIN);
@@ -72,9 +72,7 @@ void setup() {
   numPackagesDelivered = 0;
   intersectionNum = 0;
 
-  Serial.print("stopping wheels");
-  rightWheel.write(90);
-  leftWheel.write(90);
+  stopWheels();
 }
 
 void loop() {
@@ -82,11 +80,13 @@ void loop() {
 
   if (checkForIntersections && intersectionDetected()) {
     intersectionNum++;
-    talk(String("intersection number") + intersectionNum + "detected");
+    String msg = String("intersection number ") + intersectionNum + " detected";
+    Serial.println(msg);
+    talk(msg);
 
     if (intersectionNum == 1) {
       for (int i = 0; i < 4; i++) {
-        driveForward();
+        followLine();
       }
     }
     else if (intersectionNum >= 2) {
@@ -95,10 +95,12 @@ void loop() {
       turnHeadToFaceForward();
 
       if (objectOnRight) {
+        turnRight();
+
         while (!endDetected()) {
           followLine();
         }
-        stop();
+        stopWheels();
 
         deliverPackage();
         reverseDirection();
@@ -108,14 +110,15 @@ void loop() {
         while (!intersectionDetected()) {
           followLine();
         }
-        stop();
+        stopWheels();
+        Serial.println("Back at main road");
 
         // you are at intersection but check if objects are on left
         if (objectOnLeft) {
           while (!endDetected()) {
             followLine();
           }
-          stop();
+          stopWheels();
 
           deliverPackage();
           reverseDirection();
@@ -124,7 +127,8 @@ void loop() {
           while (!intersectionDetected()) {
             followLine();
           }
-          stop();
+          stopWheels();
+          Serial.println("Back at main road");
 
           turnLeft();
         }
@@ -138,7 +142,7 @@ void loop() {
         while (!endDetected()) {
           followLine();
         }
-        stop();
+        stopWheels();
 
         deliverPackage();
         reverseDirection();
@@ -146,16 +150,28 @@ void loop() {
         while (!intersectionDetected()) {
           followLine();
         }
-        stop();
+        stopWheels();
+        Serial.println("Back at main road");
 
         turnLeft();
       }
+      else {
+        Serial.println("No objects to deliver at this intersection. Moving on.");
+      }
+
+      for (int i = 0; i < 4; i++) {
+        followLine();
+      }
     }
   }
+
+  if (numPackagesDelivered == 5) {
+    Serial.println("All packages delivered");
+    celebrate();
+    goHome();
+  }
   delay(200); //redundancy
-  //celebrate();
-  //goHome();
-  //}
+
 }
 
 /** Drives forward and adjusts left and right */
@@ -163,30 +179,28 @@ void followLine()
 {
   left_ir = digitalRead(IR_LEFT_PIN);
   right_ir = digitalRead(IR_RIGHT_PIN);
-  Serial.print("left ir");
-  Serial.println(left_ir);
-  Serial.print("right ir");
-  Serial.println(right_ir);
+  //  Serial.print("left ir");
+  //  Serial.println(left_ir);
+  //  Serial.print("right ir");
+  //  Serial.println(right_ir);
 
   if (left_ir == 1 && right_ir == 0)
   {
-    Serial.print("adjust left");
     adjustLeft();
   }
   else if (left_ir == 0 && right_ir == 1)
   {
-    Serial.print("adjust right");
     adjustRight();
   }
   else if (left_ir == 0 && right_ir == 0)
   {
-    Serial.print("move forward");
     driveForward();
   }
 }
 
 void adjustLeft()
 {
+  Serial.println("Adjusting left");
   rightWheel.write(RIGHT_SPEED + 20); //start spinning
   leftWheel.write(90);
   delay(ADJUST_DELAY);
@@ -195,13 +209,14 @@ void adjustLeft()
 
 void adjustRight()
 {
+  Serial.println("Adjusting right");
   leftWheel.write(LEFT_SPEED - 20);
   rightWheel.write(90);
   delay(ADJUST_DELAY);
   leftWheel.write(90);
 }
 
-void stop() {
+void stopWheels() {
   rightWheel.write(90);
   leftWheel.write(90);
 }
@@ -209,29 +224,33 @@ void stop() {
 /**  Move wheels forward x amount */
 void driveForward()
 {
+  Serial.println("Driving forward");
   rightWheel.write(RIGHT_SPEED);
   leftWheel.write(LEFT_SPEED);
   delay(DRIVE_DELAY);
-  stop();
+  stopWheels();
 }
 
 void turnRight() {
+  Serial.println("Turning right");
   leftWheel.write(LEFT_SPEED);
   rightWheel.write(LEFT_SPEED);
   delay(TURN_DELAY);
-  stop();
+  stopWheels();
 }
 
 void turnLeft()
 {
+  Serial.println("Turning left");
   rightWheel.write(RIGHT_SPEED);
   leftWheel.write(RIGHT_SPEED);
   delay(TURN_DELAY);
-  stop();
+  stopWheels();
 }
 
 void reverseDirection()
 {
+  Serial.println("Reversing direction");
   turnRight();
   turnRight();
 }
@@ -241,12 +260,14 @@ bool intersectionDetected() {
 }
 
 bool checkForObjectOnRight() {
+  Serial.println("Checking for object on the right");
   turnHeadToTheRight();
   delay(2000);
   return objectDetected();
 }
 
 bool checkForObjectOnLeft() {
+  Serial.println("Checking for object on the left");
   turnHeadToTheLeft();
   delay(2000);
   return objectDetected();
@@ -265,7 +286,7 @@ void turnHeadToFaceForward() {
 }
 
 bool objectDetected() {
-  delay(50);
+  delay(100);
   // Do multiple pings (default=5), discard out of range pings and return median in microseconds.
   int medianEchoTime = sonar.ping_median();
 
@@ -275,18 +296,21 @@ bool objectDetected() {
   bool objectDetected = currentDistance != 0 && currentDistance < MAX_DISTANCE;
 
   if (objectDetected) {
-    String msg = String("I see someone waiting for a package. They are") + currentDistance + "centemeters away";
+    String msg = String("I see someone waiting for a package. They are ") + currentDistance + " centemeters away";
     Serial.println(msg);
     talk(msg);
     // TODO: Dislay currentDistnace on a LED screen?
   } else {
-    talk("No object detected");
+    String msg = "No object detected";
+    Serial.println(msg);
+    talk(msg);
   }
 
   return objectDetected;
 }
 
 void deliverPackage() {
+  Serial.println("Delivering package");
   talk("Delivery!");
   numPackagesDelivered++;
 }
@@ -298,14 +322,14 @@ void talk(String message) {
 }
 
 bool endDetected() {
-  delay(50);
+  delay(100);
   // Do multiple pings (default=5), discard out of range pings and return median in microseconds.
   int medianEchoTime = sonar.ping_median();
 
   // Converts microseconds to distance in centimeters.
   int currentDistance = sonar.convert_cm(medianEchoTime);
 
-  String msg = String("I see someone waiting for a package. They are") + currentDistance + "centemeters away";
+  String msg = String("Person is ") + currentDistance + " centemeters away";
   Serial.println(msg);
 
   bool endDetected = currentDistance != 0 && currentDistance < MIN_DISTANCE;
