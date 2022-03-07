@@ -1,7 +1,7 @@
 #include <NewPing.h>
 #include <Servo.h>
 
-#include <SoftwareSerial.h>
+#include <HardwareSerial.h>
 #include <SD.h>  // Needed by the EMIC2 library, though not utilized directly in this program.
 #include "EMIC2.h"
 
@@ -36,6 +36,7 @@
 #define IR_RIGHT_PIN            12
 #define IR_LEFT_PIN             3
 
+//#define mySerial Serial2
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 Servo servo;
 EMIC2 emic;
@@ -49,23 +50,25 @@ bool right_ir;// Use to make the drive home faster
 int numPackagesDelivered;
 
 int intersectionNum;
-
+//HardwareSerial Serial2;
 void setup() {
   Serial.begin(9600);
+  // Initializes the EMIC2 instance.
+  // The library sets up a SoftwareSerial port for the communication with the Emic 2 module.
+  emic.begin(RX_PIN, TX_PIN);
+  //emic.begin(&Serial2)
+  emic.setVolume(EMIC_VOLUME);
+  emic.setVoice(EMIC_VOICE);
+  talk("Hello, there! I have some packages to deliver. Let's go!");
 
+  //servo setups
   servo.attach(SERVO_PIN);
   rightWheel.attach(RIGHT_WHEEL_PIN);
   leftWheel.attach(LEFT_WHEEL_PIN);
 
   turnHeadToFaceForward();
 
-  // Initializes the EMIC2 instance.
-  // The library sets up a SoftwareSerial port for the communication with the Emic 2 module.
-  emic.begin(RX_PIN, TX_PIN);
-  emic.setVolume(EMIC_VOLUME);
-  emic.setVoice(EMIC_VOICE);
-  talk("Hello, there! I have some packages to deliver. Let's go!");
-
+  //Variables
   checkForIntersections = true;
   numPackagesDelivered = 0;
   intersectionNum = 0;
@@ -319,7 +322,7 @@ void deliverPackage() {
 }
 
 void talk(String message) {
-  emic.speak(message);
+  emic.speak(message);  
   emic.ready(); // Wait for emic to finish speaking
 }
 

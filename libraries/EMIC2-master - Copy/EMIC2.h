@@ -30,10 +30,8 @@ class EMIC2
 public:
 	EMIC2();
 	~EMIC2();
-	//void begin(uint8_t rx_pin, uint8_t tx_pin);
-	//void begin(uint8_t rx_pin, uint8_t tx_pin, uint8_t cs_pin);
-	void begin(HardwareSerial *hs);
-    	void begin(HardwareSerial *hs, uint8_t cs_pin);
+	void begin(uint8_t rx_pin, uint8_t tx_pin);
+	void begin(uint8_t rx_pin, uint8_t tx_pin, uint8_t cs_pin);
 //    void speak(char *msg);
 	void speak(String msg);
 	void speak(char num);
@@ -77,8 +75,7 @@ public:
 	void getVInfo();
 
 private:
-	//SoftwareSerial *_emic2_io;
-	HardwareSerial *_emic2_io;
+	SoftwareSerial *_emic2_io;
 	uint8_t _paused;
 	uint8_t _voice;
 	int8_t _volume;
