@@ -16,7 +16,7 @@
 #define SERVO_PIN              9
 #define SERVO_MIN_POSITION     0
 #define SERVO_MAX_POSITION     180
-#define SERVO_MIDDLE_POSITION  (SERVO_MAX_POSITION - SERVO_MIN_POSITION) / 2
+#define SERVO_MIDDLE_POSITION  (SERVO_MAX_POSITION - SERVO_MIN_POSITION) / 2 
 
 // Speed values
 #define LEFT_SPEED              93
@@ -88,15 +88,26 @@ void loop() {
 
     if (intersectionNum == 1) {
       while (intersectionDetected()) {
-        driveForward();
+        for(int i=0;i<3;i++)
+        {
+          driveForward();
+        }
       }
       stopWheels();
     }
-    else if (intersectionNum >= 2) {
+    else if(intersectionNum==2){
+      
+      stopWheels();
+      delay(1000);
+      for(int i=0;i<12;i++)
+        {
+          driveForward();
+        }
+    }
+    else if (intersectionNum >= 3) {
       const bool objectOnRight = checkForObjectOnRight();
       const bool objectOnLeft = checkForObjectOnLeft();
       turnHeadToFaceForward();
-
       if (objectOnRight) {
         turnRight();
 
@@ -208,7 +219,7 @@ void followLine()
 void adjustLeft()
 {
   Serial.println("Adjusting left");
-  rightWheel.write(RIGHT_SPEED + 20); //start spinning
+  rightWheel.write(RIGHT_SPEED); //start spinning
   leftWheel.write(90);
   delay(ADJUST_DELAY);
   rightWheel.write(90);
@@ -217,7 +228,7 @@ void adjustLeft()
 void adjustRight()
 {
   Serial.println("Adjusting right");
-  leftWheel.write(LEFT_SPEED - 20);
+  leftWheel.write(LEFT_SPEED);
   rightWheel.write(90);
   delay(ADJUST_DELAY);
   leftWheel.write(90);
@@ -323,12 +334,14 @@ void deliverPackage() {
 }
 
 void talk(String message) {
-  leftWheel.detach();
+ /* leftWheel.detach();
   rightWheel.detach();
+  servo.detach();
   emic.speak(message);  
   emic.ready(); // Wait for emic to finish speaking
   rightWheel.attach(RIGHT_WHEEL_PIN);
-  leftWheel.attach(LEFT_WHEEL_PIN);  
+  leftWheel.attach(LEFT_WHEEL_PIN);
+  servo.attach(SERVO_PIN);  */
 }
 
 bool endDetected() {
