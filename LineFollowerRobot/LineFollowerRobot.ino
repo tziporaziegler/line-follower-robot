@@ -1,10 +1,5 @@
 #include <NewPing.h>
 #include <Servo.h>
-//#include<SoftwareSerial.h>
-
-//#include <HardwareSerial.h>
-//#include <SD.h>  // Needed by the EMIC2 library, though not utilized directly in this program.
-//#include "EMIC2.h"
 
 // Ultrasonic distance sensor - eyes
 #define TRIGGER_PIN            7
@@ -29,12 +24,6 @@
 #define TURN_SPEED_LEFT         100
 #define LOOP_COUNT              9
 
-// Emic 2
-//#define RX_PIN                  6  // Connect to SOUT pin
-//#define TX_PIN                  5  // Connect to SIN pin
-//#define EMIC_VOLUME             0  // -48 to 18 dB
-//#define EMIC_VOICE              6  // 9 choices: 0-8
-
 #define RIGHT_WHEEL_PIN         10
 #define LEFT_WHEEL_PIN          11
 
@@ -45,42 +34,30 @@
 #define RED_LED                 6
 #define YELLOW_LED              5
 
-//#define mySerial Serial2
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 Servo servo;
-//EMIC2 emic;
 
 Servo rightWheel;
 Servo leftWheel;
 
 bool checkForIntersections;
 bool left_ir;
-bool right_ir;// Use to make the drive home faster
+bool right_ir; // Use to make the drive home faster
 int numPackagesDelivered;
-
 int intersectionNum;
-//HardwareSerial Serial2;
+
 void setup() {
   Serial.begin(9600);
   pinMode(GREEN_LED, OUTPUT);
   pinMode(RED_LED, OUTPUT);
   pinMode(YELLOW_LED, OUTPUT);
-  // Initializes the EMIC2 instance.
-  // The library sets up a SoftwareSerial port for the communication with the Emic 2 module.
-  //emic.begin(RX_PIN, TX_PIN);
-  //emic.begin(&Serial2)
-  //emic.setVolume(EMIC_VOLUME);
-  //emic.setVoice(EMIC_VOICE);
-  //talk("Hello, there! I have some packages to deliver. Let's go!");
 
-  //servo setups
+  // Servo setups
   servo.attach(SERVO_PIN);
   rightWheel.attach(RIGHT_WHEEL_PIN);
   leftWheel.attach(LEFT_WHEEL_PIN);
-
   turnHeadToFaceForward();
 
-  //Variables
   checkForIntersections = true;
   numPackagesDelivered = 0;
   intersectionNum = 0;
@@ -93,7 +70,6 @@ void loop() {
     intersectionNum++;
     String msg = String("intersection number ") + intersectionNum + " detected";
     Serial.println(msg);
-    //talk(msg);
 
     if (intersectionNum == 1) {
       while (intersectionDetected()) {
@@ -105,8 +81,8 @@ void loop() {
       stopWheels();
     }
     else if (intersectionNum == 2) {
-
       stopWheels();
+
       digitalWrite(RED_LED, HIGH);
       delay(1000);
       digitalWrite(RED_LED, LOW);
@@ -120,10 +96,13 @@ void loop() {
       digitalWrite(RED_LED, HIGH);
       delay(500);
       digitalWrite(RED_LED, LOW);
+
       const bool objectOnRight = checkForObjectOnRight();
       const bool objectOnLeft = checkForObjectOnLeft();
       turnHeadToFaceForward();
+
       delay(100);
+
       if (objectOnRight) {
         turnRight();
 
@@ -143,7 +122,7 @@ void loop() {
         stopWheels();
         Serial.println("Back at main road");
 
-        // you are at intersection but check if objects are on left
+        // You are at intersection but check if objects are on left
         if (objectOnLeft) {
           for (int i = 0; i < LOOP_COUNT; i++)
           {
@@ -198,22 +177,15 @@ void loop() {
         {
           driveForward();
         }
-
       }
-      if(intersectionNum==7)
+      if (intersectionNum == 7)
       {
-        checkForIntersections=false;
+        checkForIntersections = false;
       }
-
-      //while (intersectionDetected()) {
-      //driveForward();
-      //}
-      //stopWheels();
     }
   }
-  else if(intersectionNum==7){
-  
-    while(!endDetected())
+  else if (intersectionNum == 7) {
+    while (!endDetected())
     {
       followLine();
     }
@@ -225,8 +197,8 @@ void loop() {
   else
   {
     followLine();
-  } 
-  
+  }
+
   if (numPackagesDelivered == 5) {
     Serial.println("All packages delivered");
     celebrate();
@@ -239,10 +211,6 @@ void followLine()
 {
   left_ir = digitalRead(IR_LEFT_PIN);
   right_ir = digitalRead(IR_RIGHT_PIN);
-  //  Serial.print("left ir");
-  //  Serial.println(left_ir);
-  //  Serial.print("right ir");
-  //  Serial.println(right_ir);
 
   if (left_ir == 1 && right_ir == 0)
   {
@@ -261,7 +229,7 @@ void followLine()
 void adjustLeft()
 {
   Serial.println("Adjusting left");
-  rightWheel.write(RIGHT_SPEED); //start spinning
+  rightWheel.write(RIGHT_SPEED); // Start spinning
   leftWheel.write(90);
   delay(ADJUST_DELAY);
   rightWheel.write(90);
@@ -353,6 +321,7 @@ void turnHeadToFaceForward() {
 
 bool objectDetected() {
   delay(100);
+
   // Do multiple pings (default=5), discard out of range pings and return median in microseconds.
   int medianEchoTime = sonar.ping_median();
 
@@ -364,7 +333,7 @@ bool objectDetected() {
   if (objectDetected) {
     String msg = String("I see someone waiting for a package. They are ") + currentDistance + " centimeters away";
     Serial.println(msg);
-    //talk(msg);
+
     digitalWrite(YELLOW_LED, HIGH);
     delay(500);
     digitalWrite(YELLOW_LED, LOW);
@@ -372,7 +341,6 @@ bool objectDetected() {
   } else {
     String msg = "No object detected";
     Serial.println(msg);
-    //talk(msg);
   }
 
   return objectDetected;
@@ -380,32 +348,18 @@ bool objectDetected() {
 
 void deliverPackage() {
   Serial.println("Delivering package");
-  //talk("Delivery!");
+
   digitalWrite(GREEN_LED, HIGH);
   delay(500);
   digitalWrite(GREEN_LED, LOW);
+
   numPackagesDelivered++;
+
   delay(500);
 }
 
-void talk(String message) {
-  /* leftWheel.detach();
-    rightWheel.detach();
-    servo.detach();
-    emic.speak(message);
-    emic.ready(); // Wait for emic to finish speaking
-    rightWheel.attach(RIGHT_WHEEL_PIN);
-    leftWheel.attach(LEFT_WHEEL_PIN);
-    servo.attach(SERVO_PIN);  */
-}
-
 bool endDetected() {
-  //delay(100);
-  // Do multiple pings (default=5), discard out of range pings and return median in microseconds.
   int currentDistance = sonar.ping_cm();
-
-  // Converts microseconds to distance in centimeters.
-  //int currentDistance = sonar.convert_cm(medianEchoTime);
 
   String msg = String("Person is ") + currentDistance + " centimeters away";
   Serial.println(msg);
@@ -416,8 +370,6 @@ bool endDetected() {
 }
 
 void celebrate() {
-  //talk("Mission accomplished!");
-
   digitalWrite(RED_LED, HIGH);
   delay(200);
   digitalWrite(RED_LED, LOW);
