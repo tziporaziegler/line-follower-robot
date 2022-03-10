@@ -362,7 +362,7 @@ bool objectDetected() {
   bool objectDetected = currentDistance != 0 && currentDistance <= MAX_DISTANCE;
 
   if (objectDetected) {
-    String msg = String("I see someone waiting for a package. They are ") + currentDistance + " centemeters away";
+    String msg = String("I see someone waiting for a package. They are ") + currentDistance + " centimeters away";
     Serial.println(msg);
     //talk(msg);
     digitalWrite(YELLOW_LED, HIGH);
@@ -407,7 +407,7 @@ bool endDetected() {
   // Converts microseconds to distance in centimeters.
   //int currentDistance = sonar.convert_cm(medianEchoTime);
 
-  String msg = String("Person is ") + currentDistance + " centemeters away";
+  String msg = String("Person is ") + currentDistance + " centimeters away";
   Serial.println(msg);
 
   bool endDetected = currentDistance != 0 && currentDistance <= MIN_DISTANCE;
