@@ -1,8 +1,7 @@
 #include <NewPing.h>
 #include <Servo.h>
-//#include<SoftwareSerial.h>
 
-//#include <HardwareSerial.h>
+//#include<SoftwareSerial.h>
 //#include <SD.h>  // Needed by the EMIC2 library, though not utilized directly in this program.
 //#include "EMIC2.h"
 
@@ -22,7 +21,7 @@
 #define LEFT_SPEED              94
 #define RIGHT_SPEED             86
 #define DRIVE_DELAY             50
-#define ADJUST_DELAY            100 // use in servo delay
+#define ADJUST_DELAY            100 // Use in servo delay
 #define TURN_DELAY              2000
 #define REVERSE_DELAY           1900
 #define TURN_SPEED_RIGHT        80
@@ -44,7 +43,6 @@
 #define RED_LED                 6
 #define YELLOW_LED              5
 
-//#define mySerial Serial2
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 Servo servo;
 //EMIC2 emic;
@@ -54,32 +52,33 @@ Servo leftWheel;
 
 bool checkForIntersections;
 bool left_ir;
-bool right_ir;// Use to make the drive home faster
+bool right_ir; // Use to make the drive home faster
 int numPackagesDelivered;
 
 int intersectionNum;
-//HardwareSerial Serial2;
+
 void setup() {
   Serial.begin(9600);
+  
   pinMode(GREEN_LED, OUTPUT);
   pinMode(RED_LED, OUTPUT);
   pinMode(YELLOW_LED, OUTPUT);
+  
   // Initializes the EMIC2 instance.
   // The library sets up a SoftwareSerial port for the communication with the Emic 2 module.
   //emic.begin(RX_PIN, TX_PIN);
   //emic.begin(&Serial2)
   //emic.setVolume(EMIC_VOLUME);
   //emic.setVoice(EMIC_VOICE);
-  //talk("Hello, there! I have some packages to deliver. Let's go!");
+  talk("Hello, there! I have some packages to deliver. Let's go!");
 
-  //servo setups
+  // Servo setups
   servo.attach(SERVO_PIN);
   rightWheel.attach(RIGHT_WHEEL_PIN);
   leftWheel.attach(LEFT_WHEEL_PIN);
 
   turnHeadToFaceForward();
 
-  //Variables
   checkForIntersections = true;
   numPackagesDelivered = 0;
   intersectionNum = 0;
@@ -106,7 +105,6 @@ void loop() {
       stopWheels();
     }
     else if (intersectionNum == 2) {
-
       stopWheels();
       digitalWrite(RED_LED, HIGH);
       delay(1000);
@@ -121,10 +119,14 @@ void loop() {
       digitalWrite(RED_LED, HIGH);
       delay(500);
       digitalWrite(RED_LED, LOW);
+      
       const bool objectOnRight = checkForObjectOnRight();
       const bool objectOnLeft = checkForObjectOnLeft();
+      
       turnHeadToFaceForward();
+      
       delay(100);
+      
       if (objectOnRight) {
         turnRight();
 
@@ -175,6 +177,7 @@ void loop() {
       }
       else if (objectOnLeft) {
         turnLeft();
+        
         // Drive until distance sensor detects that short enough distance from the object
         while (!endDetected()) {
           followLine();
@@ -199,13 +202,7 @@ void loop() {
         {
           driveForward();
         }
-
       }
-
-      //while (intersectionDetected()) {
-      //driveForward();
-      //}
-      //stopWheels();
     }
   }
 
@@ -344,9 +341,9 @@ bool objectDetected() {
   bool objectDetected = currentDistance != 0 && currentDistance <= MAX_DISTANCE;
 
   if (objectDetected) {
-    String msg = String("I see someone waiting for a package. They are ") + currentDistance + " centemeters away";
+    String msg = String("I see someone waiting for a package. They are ") + currentDistance + " centimeters away";
     Serial.println(msg);
-    //talk(msg);
+    talk(msg);
     digitalWrite(YELLOW_LED, HIGH);
     delay(500);
     digitalWrite(YELLOW_LED, LOW);
@@ -354,7 +351,7 @@ bool objectDetected() {
   } else {
     String msg = "No object detected";
     Serial.println(msg);
-    //talk(msg);
+    talk(msg);
   }
 
   return objectDetected;
@@ -362,7 +359,7 @@ bool objectDetected() {
 
 void deliverPackage() {
   Serial.println("Delivering package");
-  //talk("Delivery!");
+  talk("Delivery!");
   digitalWrite(GREEN_LED, HIGH);
   delay(500);
   digitalWrite(GREEN_LED, LOW);
@@ -382,14 +379,13 @@ void talk(String message) {
 }
 
 bool endDetected() {
-  //delay(100);
   // Do multiple pings (default=5), discard out of range pings and return median in microseconds.
-  int currentDistance = sonar.ping_cm();
+  int medianEchoTime = sonar.ping_median();
 
   // Converts microseconds to distance in centimeters.
-  //int currentDistance = sonar.convert_cm(medianEchoTime);
+  int currentDistance = sonar.convert_cm(medianEchoTime);
 
-  String msg = String("Person is ") + currentDistance + " centemeters away";
+  String msg = String("Person is ") + currentDistance + " centimeters away";
   Serial.println(msg);
 
   bool endDetected = currentDistance != 0 && currentDistance <= MIN_DISTANCE;
@@ -398,7 +394,7 @@ bool endDetected() {
 }
 
 void celebrate() {
-  //talk("Mission accomplished!");
+  talk("Mission accomplished!");
 
   digitalWrite(RED_LED, HIGH);
   delay(200);
