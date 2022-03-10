@@ -24,9 +24,10 @@
 #define DRIVE_DELAY             50
 #define ADJUST_DELAY            100 // use in servo delay
 #define TURN_DELAY              2000
-#define REVERSE_DELAY           1900
+#define REVERSE_DELAY           1800
 #define TURN_SPEED_RIGHT        80
 #define TURN_SPEED_LEFT         100
+#define LOOP_COUNT              9
 
 // Emic 2
 //#define RX_PIN                  6  // Connect to SOUT pin
@@ -88,8 +89,6 @@ void setup() {
 }
 
 void loop() {
-  followLine();
-
   if (checkForIntersections && intersectionDetected()) {
     intersectionNum++;
     String msg = String("intersection number ") + intersectionNum + " detected";
@@ -112,7 +111,7 @@ void loop() {
       delay(1000);
       digitalWrite(RED_LED, LOW);
 
-      for (int i = 0; i < 12; i++)
+      for (int i = 0; i < LOOP_COUNT; i++)
       {
         driveForward();
       }
@@ -146,7 +145,7 @@ void loop() {
 
         // you are at intersection but check if objects are on left
         if (objectOnLeft) {
-          for (int i = 0; i < 12; i++)
+          for (int i = 0; i < LOOP_COUNT; i++)
           {
             driveForward();
           }
@@ -195,11 +194,15 @@ void loop() {
       }
       else {
         Serial.println("No objects to deliver at this intersection. Moving on.");
-        for (int i = 0; i < 12; i++)
+        for (int i = 0; i < LOOP_COUNT; i++)
         {
           driveForward();
         }
 
+      }
+      if(intersectionNum==7)
+      {
+        checkForIntersections=false;
       }
 
       //while (intersectionDetected()) {
@@ -208,7 +211,22 @@ void loop() {
       //stopWheels();
     }
   }
-
+  else if(intersectionNum==7){
+  
+    while(!endDetected())
+    {
+      followLine();
+    }
+    stopWheels();
+    deliverPackage();
+    reverseDirection();
+    celebrate();
+  }
+  else
+  {
+    followLine();
+  } 
+  
   if (numPackagesDelivered == 5) {
     Serial.println("All packages delivered");
     celebrate();
