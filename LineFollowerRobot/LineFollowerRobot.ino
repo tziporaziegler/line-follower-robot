@@ -75,13 +75,13 @@ void loop() {
       while (intersectionDetected()) {
         for (int i = 0; i < 5; i++)
         {
-          driveForward();
+          driveForward(); //clearing the merge intersection
         }
       }
       stopWheels();
     }
-    else if (intersectionNum == 2) {
-      stopWheels();
+    else if (intersectionNum == 2) { 
+      stopWheels(); //stop at i0
 
       digitalWrite(RED_LED, HIGH);
       delay(1000);
@@ -93,7 +93,7 @@ void loop() {
       }
     }
     else if (intersectionNum >= 3) {
-      digitalWrite(RED_LED, HIGH);
+      digitalWrite(RED_LED, HIGH); //anything other than i0 check for objects
       delay(500);
       digitalWrite(RED_LED, LOW);
 
@@ -109,7 +109,7 @@ void loop() {
         while (!endDetected()) {
           followLine();
         }
-        stopWheels();
+        stopWheels(); //follow line till you reach the object then stop
 
         deliverPackage();
         reverseDirection();
@@ -126,9 +126,9 @@ void loop() {
         if (objectOnLeft) {
           for (int i = 0; i < LOOP_COUNT; i++)
           {
-            driveForward();
+            driveForward(); //object on both left and right
           }
-          stopWheels();
+          stopWheels(); //clear the intersection to follow line
 
           while (!endDetected()) {
             followLine();
